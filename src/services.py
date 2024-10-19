@@ -1,34 +1,23 @@
 import json
-from idlelib.iomenu import encoding
-
-from src.views import filter_operations_by_date, xlsx_read
-import os
-import re
+import logging
+from typing import Dict, List
 
 
-ex = xlsx_read("../data/operations.xlsx")
-op = filter_operations_by_date(ex, "28.12.2021 00:00:00")
+def simple_search(search_string: str, transactions: List[Dict[str, str]]) -> str:
+    """
+    Ищет транзакции, содержащие заданную строку в описании или категории,
+    и возвращает результат в формате JSON.
+    """
+    logging.info("Поиск транзакций по строке: '%s'", search_string)
 
-
-def search_transactions(transactions: list[dict], search_string: str) -> list[dict]:
-    result = []
-    pattern = re.compile(re.escape(search_string), re.IGNORECASE)
+    search_string = search_string.lower()
+    filtered_transactions = []
     for transaction in transactions:
-        desc = transaction.get("Категория")
-        if search_string == desc:
-            if type(desc) and type(desc) is not str:
-                pass
-            elif re.search(pattern, desc):
-                result.append(transaction)
-        elif search_string != desc:
-            desc_2 = transaction.get("Описание")
-            if type(desc) and type(desc) is not str:
-                pass
-            elif re.search(pattern, desc_2):
-                result.append(transaction)
+        description = transaction.get('Описание', '').lower()
+        category = transaction.get('Категория', '').lower()
+        if search_string in description or search_string in category:
+            filtered_transactions.append(transaction)
 
-    return result
+    logging.info("Найдено %d транзакций.", len(filtered_transactions))
 
-
-# t = json.dumps(search_transactions(op, 'Аптеки'), ensure_ascii=False)
-# print(t)
+    return json.dumps(filtered_transactions, ensure_ascii=False)

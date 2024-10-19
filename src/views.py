@@ -1,123 +1,47 @@
-from time import strftime
-import requests
-import pandas as pd
+import json
 import logging
-import os
 from datetime import datetime
-from dotenv import load_dotenv
 
-load_dotenv()
-API_KEY = os.getenv("API_KEY")
+import pandas as pd
 
-logger = logging.getLogger("xlsx_read")
-logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler("../logs/xlsx_read.log", mode="w")
-file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s: %(message)s")
-file_handler.setFormatter(file_formatter)
-logger.addHandler(file_handler)
+from src import utils
 
-xlsx_path = "../data/operations.xlsx"
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-def xlsx_read(path):
-    """Функция, которая принимает на вход путь к excel"""
+def main_page(date_string: str):
+    """
+    Генерирует JSON-ответ для главной страницы с данными о транзакциях,
+    курсах валют и ценах акций.
+    """
+    logging.info("Запрос на главную страницу с датой: %s", date_string)
+
     try:
-        logger.info("Открываем файл excel")
-        excel_data = pd.read_excel(path)
-        return excel_data.to_dict(orient="records")
-    except FileNotFoundError as ex:
-        logger.error(f"Произошла ошибка: файл не найден - {ex}")
-        return pd.DataFrame()  # Возвращаем пустой DataFrame вместо списка
-    except pd.errors.ParserError as ex:
-        logger.error(f"Произошла ошибка при разборе csv - {ex}")
-        return pd.DataFrame()  # Возвращаем пустой DataFrame вместо списка
-    except Exception as ex:
-        logger.error(f"Произошла непредвиденная ошибка - {ex}")
-        return pd.DataFrame()  # Возвращаем пустой DataFrame вместо списка
+        current_time = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+        greeting = utils.get_greeting(current_time)
+
+        transactions = pd.read_excel('../data/operations.xlsx')
+        top_transactions = utils.get_top_transactions(transactions)
+
+        cards_data = utils.process_card_data(transactions)
+
+        currency_rates = utils.get_currency_rates()
+        stock_prices = utils.get_stock_prices()
+
+        response = {
+            "greeting": greeting,
+            "cards": cards_data,
+            "top_transactions": top_transactions,
+            "currency_rates": currency_rates,
+            "stock_prices": stock_prices,
+        }
+
+        logging.info("Успешно сформирован JSON-ответ.")
+        return json.dumps(response, ensure_ascii=False)
+
+    except Exception as e:
+        logging.error("Ошибка в main_page: %s", str(e))
+        return json.dumps({"error": "Произошла ошибка."}, ensure_ascii=False)
 
 
-ex = xlsx_read(xlsx_path)
-# print(ex)
-
-
-def filter_operations_by_date(path: str, inp_data):
-    """
-    Функция для фильтрации операций по дате.
-
-    :param path: str - путь к Excel-файлу с данными.
-    :param incoming_date_str: str - строка с входящей датой в формате 'DD.MM.YYYY'.
-    :return: pd.DataFrame - отфильтрованный DataFrame с операциями в заданном диапазоне дат.
-    """
-    inp_data_dt = datetime.strptime(inp_data, "%d.%m.%Y %H:%M:%S")
-
-    start_data = inp_data_dt.replace(day=1)
-    logger.info("Фильтруем даты за указанный период")
-    filt_op = []
-    for i in path:
-
-        op_data = datetime.strptime(i["Дата операции"], "%d.%m.%Y %H:%M:%S")
-        if start_data <= op_data <= inp_data_dt:
-            filt_op.append(i)
-            return filt_op
-
-
-t = filter_operations_by_date(ex, "28.12.2021 00:00:00")
-# print(t)
-
-
-def nub_card(filt):
-    """Функция создает список номеров карт"""
-    lists = []
-    for i in filt:
-        if i["Номер карты"] not in lists:
-            lists.append(i["Номер карты"])
-    return lists
-
-
-nc = nub_card(t)
-# print(nc)
-
-
-def sum_op(filt):
-    """Функция считает общую сумму расходов"""
-    logger.info("Считаем общую сумму расходов за указанный период")
-    count = 0
-    for i in nc:
-        for s in filt:
-            if i == s["Номер карты"]:
-                if s["Сумма платежа"] < 0:
-                    count -= s["Сумма платежа"]
-
-        return round(count, 2)
-
-
-so = sum_op(t)
-# print(so)
-
-
-def cash(filt):
-    """"""
-    count = 0
-    for i in filt:
-        if i["Сумма платежа"] < 0:
-            if i["Сумма платежа"]:
-                result = i["Сумма платежа"] / 100
-                count -= result
-    return count
-
-
-ch = cash(t)
-# print(ch)
-
-
-def top(filt):
-    """"""
-    sorted_transactions = sorted(filt, key=lambda x: x["Сумма платежа"], reverse=True)
-    top_5 = sorted_transactions[:5]
-
-    for index, filt in enumerate(top_5, start=1):
-        return f"Transaction {index}: Amount - {filt['Сумма платежа']}, Description - {filt['Описание']}"
-
-
-t = top(t)
-# print(t)
+print(main_page("2024-10-19 14:15:10"))
