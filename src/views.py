@@ -1,6 +1,6 @@
 from time import strftime
 import requests
-import  pandas as pd
+import pandas as pd
 import logging
 import os
 from datetime import datetime
@@ -17,6 +17,7 @@ file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 
 xlsx_path = "../data/operations.xlsx"
+
 
 def xlsx_read(path):
     """Функция, которая принимает на вход путь к excel"""
@@ -38,6 +39,7 @@ def xlsx_read(path):
 ex = xlsx_read(xlsx_path)
 # print(ex)
 
+
 def filter_operations_by_date(path: str, inp_data):
     """
     Функция для фильтрации операций по дате.
@@ -53,16 +55,15 @@ def filter_operations_by_date(path: str, inp_data):
     filt_op = []
     for i in path:
 
-        op_data = datetime.strptime(i['Дата операции'], "%d.%m.%Y %H:%M:%S")
-        if start_data<= op_data<=inp_data_dt:
+        op_data = datetime.strptime(i["Дата операции"], "%d.%m.%Y %H:%M:%S")
+        if start_data <= op_data <= inp_data_dt:
             filt_op.append(i)
             return filt_op
 
 
-
-
-t=filter_operations_by_date(ex, '28.12.2021 00:00:00')
+t = filter_operations_by_date(ex, "28.12.2021 00:00:00")
 # print(t)
+
 
 def nub_card(filt):
     """Функция создает список номеров карт"""
@@ -72,45 +73,51 @@ def nub_card(filt):
             lists.append(i["Номер карты"])
     return lists
 
+
 nc = nub_card(t)
 # print(nc)
+
 
 def sum_op(filt):
     """Функция считает общую сумму расходов"""
     logger.info("Считаем общую сумму расходов за указанный период")
-    count=0
+    count = 0
     for i in nc:
         for s in filt:
-            if i == s['Номер карты']:
-                if s["Сумма платежа"]<0:
+            if i == s["Номер карты"]:
+                if s["Сумма платежа"] < 0:
                     count -= s["Сумма платежа"]
 
-        return round(count,2)
+        return round(count, 2)
 
-so=sum_op(t)
+
+so = sum_op(t)
 # print(so)
 
-def  cash(filt):
+
+def cash(filt):
     """"""
     count = 0
     for i in filt:
-        if i["Сумма платежа"]<0:
+        if i["Сумма платежа"] < 0:
             if i["Сумма платежа"]:
-                result=i["Сумма платежа"]/100
-                count-=result
+                result = i["Сумма платежа"] / 100
+                count -= result
     return count
 
-ch=cash(t)
+
+ch = cash(t)
 # print(ch)
+
 
 def top(filt):
     """"""
-    sorted_transactions = sorted(filt, key=lambda x: x['Сумма платежа'], reverse=True)
+    sorted_transactions = sorted(filt, key=lambda x: x["Сумма платежа"], reverse=True)
     top_5 = sorted_transactions[:5]
 
     for index, filt in enumerate(top_5, start=1):
         return f"Transaction {index}: Amount - {filt['Сумма платежа']}, Description - {filt['Описание']}"
 
-t=top(t)
-# print(t)
 
+t = top(t)
+# print(t)

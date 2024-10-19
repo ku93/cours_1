@@ -7,9 +7,10 @@ import re
 
 
 ex = xlsx_read("../data/operations.xlsx")
-op =filter_operations_by_date(ex, '28.12.2021 00:00:00')
+op = filter_operations_by_date(ex, "28.12.2021 00:00:00")
 
-def search_transactions(transactions: list[dict], search_string: str)-> list[dict]:
+
+def search_transactions(transactions: list[dict], search_string: str) -> list[dict]:
     result = []
     pattern = re.compile(re.escape(search_string), re.IGNORECASE)
     for transaction in transactions:
@@ -27,6 +28,7 @@ def search_transactions(transactions: list[dict], search_string: str)-> list[dic
                 result.append(transaction)
 
     return result
+
 
 # t = json.dumps(search_transactions(op, 'Аптеки'), ensure_ascii=False)
 # print(t)
