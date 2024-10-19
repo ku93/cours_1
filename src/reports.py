@@ -17,3 +17,4 @@ def spending_by_category(transactions: pd.DataFrame, category: str, inp_data: st
 
 s = spending_by_category(ex, "Аптеки", '28.12.2021 00:00:00')
 print(s)
+
