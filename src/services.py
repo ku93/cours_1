@@ -14,8 +14,11 @@ def simple_search(search_string: str, transactions: List[Dict[str, str]]) -> str
     filtered_transactions = []
     for transaction in transactions:
         description = transaction.get('Описание', '').lower()
-        category = transaction.get('Категория', '').lower()
-        if search_string in description or search_string in category:
+        category = transaction.get('Категория', '')
+        if (
+            search_string in description
+            or isinstance(category, str) and search_string in category.lower()
+        ):
             filtered_transactions.append(transaction)
 
     logging.info("Найдено %d транзакций.", len(filtered_transactions))

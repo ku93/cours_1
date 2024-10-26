@@ -42,6 +42,3 @@ def main_page(date_string: str):
     except Exception as e:
         logging.error("Ошибка в main_page: %s", str(e))
         return json.dumps({"error": "Произошла ошибка."}, ensure_ascii=False)
-
-
-print(main_page("2024-10-19 14:15:10"))

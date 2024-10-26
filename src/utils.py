@@ -168,6 +168,3 @@ def get_stock_prices() -> Optional[Dict[str, Optional[float]]]:
         return stock_data
     else:
         logging.warning("Не удалось загрузить настройки пользователя.")
-
-g=get_stock_prices()
-print(g)

@@ -11,6 +11,7 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
     """Возвращает DataFrame с тратами по заданной категории за последние три месяца от переданной даты."""
     logging.info("Запрос на траты по категории: '%s'", category)
 
+
     if date is None:
         date = datetime.now().strftime("%Y-%m-%d")
 

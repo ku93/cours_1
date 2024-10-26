@@ -34,34 +34,18 @@ def mock_transactions():
     return pd.DataFrame(data)
 
 
-def test_spending_by_category_found(mock_transactions):
-    """Тест на успешную фильтрацию транзакций по категории."""
-    category = "Продукты"
-    result = spending_by_category(mock_transactions, category, date="2024-10-19")
-
-    assert len(result) == 2
-    assert result['Сумма платежа'].sum() == 2500
-
-
-def test_spending_by_category_not_found(mock_transactions):
-    """Тест на случай, если категория не найдена."""
-    category = "Неизвестная категория"
-    result = spending_by_category(mock_transactions, category, date="2024-10-19")
-
-    assert result.empty
-
-
-def test_spending_by_category_without_date(mock_transactions):
-    """Тест на фильтрацию транзакций без передачи даты (используется текущая дата)."""
-    category = "Продукты"
-    result = spending_by_category(mock_transactions, category)
-
-    assert len(result) == 2
-    assert result['Сумма платежа'].sum() == 2500
-
-
-def test_spending_by_category_invalid_date(mock_transactions):
-    """Тест на случай передачи некорректной даты."""
-    category = "Продукты"
-    with pytest.raises(ValueError):
-        spending_by_category(mock_transactions, category, date="invalid-date")
+@pytest.mark.parametrize("category, date, expected_len, expected_sum, raises_exception", [
+    ("Продукты", "2024-10-19", 2, 2500, None),
+    ("Неизвестная категория", "2024-10-19", 0, 0, None),
+    ("Продукты", None, 2, 2500, None),
+    ("Продукты", "invalid-date", None, None, ValueError)
+])
+def test_spending_by_category(mock_transactions, category, date, expected_len, expected_sum, raises_exception):
+    """Параметризованный тест для проверки фильтрации транзакций по категории и обработки исключений."""
+    if raises_exception:
+        with pytest.raises(raises_exception):
+            spending_by_category(mock_transactions, category, date=date)
+    else:
+        result = spending_by_category(mock_transactions, category, date=date)
+        assert len(result) == expected_len
+        assert result['Сумма платежа'].sum() == expected_sum
