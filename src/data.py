@@ -8,6 +8,7 @@ hour = data.hour
 def data(current_time):
     """Функция принимает текущую дату и приветствует пользователя"""
 
+
     if hour < 6:
         return "Доброй ночи"
     elif 6 <= hour < 12:
